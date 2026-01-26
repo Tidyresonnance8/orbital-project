@@ -3,7 +3,7 @@
 This project is devloped as a personal research initiative by an Engineering Student at **UCLouvain** (Applied Mathematics & Computer Science). The goal is to simulate and visualize orbital trajectories using Newtonian mechanics and numerical integration methods.
 
 ## Objectives
-* **Physics:** Implement the É-body problem and progress towards $J_2$ pertubations.
+* **Physics:** Implement the 2-body problem and progress towards $J_2$ pertubations.
 * **Mathematics:** Utilize Runge-Kutta 4th Order (RK4) integration for high-precision orbit propagation.
 * **Software:** Build a clean, modular python architecture.
 
