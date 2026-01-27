@@ -26,9 +26,4 @@ A key challenge in numerical integration is the accumulation of truncation error
 * **Libraries:** Numpy, Scipy, Matplotlib
 * **Environment:** Linux Ubuntu
 
-I implemented a 4th-order Runge-Kutta integrator based on the Numerical Methods curriculum at UCLouvain to ensure energy conservation and trajectory stability in a 2-body simulation.
 
-
-## Simulation Results
-Here is the output of the circular orbit simulation (Altitude: 400km) using the RK45 integrator:
-![Circular Orbit](results/circular_orbit.png)
