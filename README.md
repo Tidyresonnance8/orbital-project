@@ -12,3 +12,9 @@ This project is devloped as a personal research initiative by an Engineering Stu
 * **Libraries:** Numpy, Scipy, Matplotlib
 * **Environment:** Linux Ubuntu
 
+I implemented a 4th-oredr Runge-Kutta integrator based on the Numerical Methods curriculum at UCLouvain to ensure energy conservation and trajectory stability in a 2-body simulation.
+
+
+## Simulation Results
+Here is the output of the circular orbit simulation (Altitude: 400km) using the RK45 integrator:
+![Circular Orbit](results/circular_orbit.png)
