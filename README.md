@@ -26,4 +26,18 @@ A key challenge in numerical integration is the accumulation of truncation error
 * **Libraries:** Numpy, Scipy, Matplotlib
 * **Environment:** Linux Ubuntu
 
+### 3. $J_2$ Perturbation & Earth Oblateness
+Real-world orbits are not perfect ellipses due to Earth's non_spherical shape. I implemented the $J_2$ perturbation term in the equations of motion to model the effect of the equatorial bulge.
+
+**Key Findings:**
+- **Oscillating Keplerian Energy**: The exchange between kinetic energy and the $J_2$ potential field is clearly visible in the energy drift plot.
+- **Orbital Precession**: The non-central force causes a nodal regression, rotating the orbital plane over time.
+
+### 3D Multi-Orbit Visualization
+The 3D plot below illustrates the orbital inclination and the effect of the $J_2$ perturbation term.
+The wireframe sphere represents Earth at scale ($R_e = 6378$ km).
+
+![3D Orbit](results/orbit_3d.png)
+
+*The simulation confirms yhe nodal regression caused by Earth's oblateness, a key factor in Sun_synchronous orbit design.*
 
