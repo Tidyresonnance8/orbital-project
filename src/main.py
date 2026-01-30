@@ -1,11 +1,13 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
-from physics import MU_EARTH, R_EARTH, J2
-from solver import orbit_equations
+from physics import MU_EARTH, R_EARTH, J2, DIST_MOON, OMEGA_MOON
+from solver import orbit_equations_3body 
 import os
 from mpl_toolkits.mplot3d import Axes3D
 from solver import get_orbital_elements
+from my_solver import my_rk4_solver
+from matplotlib.animation import FuncAnimation
 
 
 def run_simulation():
@@ -15,6 +17,7 @@ def run_simulation():
         os.makedirs('results')
 
     # Conditions Initiales (Altitude 400km)
+    v_ratio = 1.1
     altitude = 400000
     r0 = R_EARTH + altitude
     # Je définis l'inclinaison
@@ -26,19 +29,39 @@ def run_simulation():
     initial_state = [r0, 0, 0, 0, vy0, vz0]
 
     # Temps de simulation (environ 90 min pour une orbite LEO)
-    t_span = (0, 30000)
-    t_eval = np.linspace(t_span[0], t_span[1], 2000) # Points où on veut calculer la position
+    t_span = (0, 100000)
+    #t_eval = np.linspace(t_span[0], t_span[1], 2000) # Points où on veut calculer la position
     
     # Résolution avec RK45 (variante de Runge-Kutta du cours)
-    sol = solve_ivp(
-        orbit_equations,
+    #sol = solve_ivp(
+    #  orbit_equations,
+    #    t_span,
+    #    initial_state,
+    #    args=(MU_EARTH,),
+    #    t_eval=t_eval,
+    #    method='RK45', # Méthode de Runge-kutta d'ordre 4(5)
+    #    rtol=1e-9      # Tolérance relative (très précis comme dans ton cours)
+    #)
+
+    # On définit un pas de temps fixe (ex: 10 secondes)
+    h = 60.0  # pas de temps fixe
+
+    # Utilisation de mon solver à la place de Scipy
+    t_rk4, y_rk4 = my_rk4_solver(
+        orbit_equations_3body,
         t_span,
         initial_state,
-        args=(MU_EARTH,),
-        t_eval=t_eval,
-        method='RK45', # Méthode de Runge-kutta d'ordre 4(5)
-        rtol=1e-9      # Tolérance relative (très précis comme dans ton cours)
+        h=h,
+        args=(MU_EARTH,)
     )
+
+    # on simule l'objet 'sol' de scipy
+    class SimpleSol:
+        def __init__(self,t,y):
+            self.t = t
+            self.y = y
+    
+    sol = SimpleSol(t_rk4, y_rk4)
 
     # Analyse SCientifique
     x, y, z = sol.y[0], sol.y[1], sol.y[2]
@@ -63,7 +86,6 @@ def run_simulation():
     slope_num, intercept = np.polyfit(sol.t, np.unwrap(omegas), 1)
 
     # Calcul théorique 
-    v_ratio = 1.1
     p = r0 * (v_ratio**2)
     a = r0 / (2 - v_ratio**2)  # Demi-grand axe initial
     n = np.sqrt(MU_EARTH / a**3)
@@ -75,9 +97,9 @@ def run_simulation():
     # Calcul de l'erreur
     error_pct = abs((slope_num - omega_dot_th) / omega_dot_th) * 100
 
-    print(f"\n--- ANALYSE J2 ---")
-    print(f"Précession Numérique : {slope_num:.4e} rad/s")
-    print(f"Précession Théorique : {omega_dot_th:.4e} rad/s")
+    print(f"\n--- ANALYSE J2 (h={h}s) ---")
+    #print(f"Précession Numérique : {slope_num:.4e} rad/s")
+    #print(f"Précession Théorique : {omega_dot_th:.4e} rad/s")
     print(f"Erreur Relative : {error_pct:.6f} %")
 
     # Affichage
@@ -85,7 +107,7 @@ def run_simulation():
     ax = fig.add_subplot(111, projection='3d')
 
     # Trajectoire du satellite
-    ax.plot(sol.y[0], sol.y[1], sol.y[2], 'r-', label="Trajectoire avec $J_2$")
+    #ax.plot(sol.y[0], sol.y[1], sol.y[2], 'r-', label="Trajectoire avec $J_2$")
 
     # Dessin de la Terre
     u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:20j]
@@ -93,26 +115,51 @@ def run_simulation():
     y_earth = R_EARTH * np.sin(u) * np.sin(v)
     z_earth = R_EARTH * np.cos(v)
     ax.plot_wireframe(x_earth, y_earth, z_earth, color='b', alpha=0.1)
+    
+    # Objets pour l'animation
+    line, = ax.plot([], [], [], 'r-', alpha=0.5, label="Trajectoire")
+    point, = ax.plot([], [], [], 'ro', markersize=6, label="Satellite")
+    moon_point, = ax.plot([], [], [], 'ko', markersize=10, label="Lune")
 
-    ax.set_xlabel('X (m)')
-    ax.set_ylabel('Y (m)')
-    ax.set_zlabel('Z (m)')
-    ax.set_title("Simulation Orbitale 3D avec Perturbation $J_2$")
+    # Limites des axes
+    zoom_on_moon = True # Change à False pour revenir au satellite
+    if zoom_on_moon:
+        limit = DIST_MOON * 1.2
+    else:
+        limit = np.max(np.abs(sol.y[0:3, :])) * 1.2
+    #max_range = np.max(np.abs(sol.y[0:3, :]))
+    ax.set_xlim(-limit, limit) # après je remplacerai par max_range pour avoir la configuration initiale
+    ax.set_ylim(-limit, limit)
+    ax.set_zlim(-limit, limit)
+    ax.set_title(f"Animation Orbitale J2 - Pas h={h}s")
     ax.legend()
 
-    max_range = np.array([sol.y[0].max()-sol.y[0].min(),
-                          sol.y[1].max()-sol.y[1].min(),
-                          sol.y[2].max()-sol.y[2].min()]).max() / 2.0
-    
-    mid_x = (sol.y[0].max()+sol.y[0].min()) * 0.5
-    mid_y = (sol.y[1].max()+sol.y[1].min()) * 0.5
-    mid_z = (sol.y[2].max()+sol.y[2].min()) * 0.5
-    ax.set_xlim(mid_x - max_range, mid_x + max_range)
-    ax.set_ylim(mid_y - max_range, mid_y + max_range)
-    ax.set_zlim(mid_z - max_range, mid_z + max_range)
+    moon_point, = ax.plot([], [], [], 'ko', markersize=8, label="Lune")
 
-    plt.savefig('results/orbit_3d.png')
+    # Logique De L'Animation
+    def update_plot(num, data, line, point):
+        # Mise à jour de la traînée (ligne) et du satellite (point)
+        point.set_data(data[0:2, num-1:num])
+        point.set_3d_properties(data[2, num-1:num])
+        line.set_data(data[0:2, :num])
+        line.set_3d_properties(data[2, :num])
+        
+        # Position de la lune à l'instant t
+        t_curr = sol.t[num-1]
+        x_l = DIST_MOON * np.cos(OMEGA_MOON * t_curr)
+        y_l = DIST_MOON * np.sin(OMEGA_MOON * t_curr)
+        moon_point.set_data([x_l], [y_l])
+        moon_point.set_3d_properties([0])  # Grâce à ça la Lune se trouve dans le plan z
+        
+        return line, point, moon_point
+
+
+    # Lancement de l'animation
+    ani = FuncAnimation(fig, update_plot, frames=len(sol.t),
+                        fargs=(sol.y, line, point), interval=20, blit=False)
+ 
     plt.show()
+    
 
 if __name__ == "__main__":
     run_simulation()

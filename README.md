@@ -48,7 +48,26 @@ The simulation was cross-verified by comparing the numerical results with the an
 ### Key Results
 - **Numerical Nodal Precession**: -5.4929e-07 rad/s
 - **Theoretical Nodal Precession**: -5.5248e-07 rad/s
-- **Final Relative Error**: **0.577%**
+- **Final Relative Error**: **0.385 %**
 
 ### Engineering Insights
 The sub-1% error demonstrates the high fidelity of the **RK45 adaptive step-size integrator**. The minor discrepancy is attributed to the difference between the first-order secular theory (analytical) and the full osculating dynamics captured by the numerical solver. This confirms that the software architecture is reliable for long-term orbital propagation.
+
+## Visualizations
+The project features a 3D visualization suite illustrating orbital inclination and nodal regression.
+![3D Orbit](results/orbit_3d.png)
+
+## 3-Body Dynamic Simulation
+The animation below shows the concurrent motion of the satellite (LEO) and the Moon. The simulation accounts for the time-dependent gravitational pull of the Moon, creating a complex perturbed environment.
+
+![Orbital Animation](results/orbit_animation.gif)
+
+## Final Validation
+By integrating the Moon's gravity and Earth's oblateness, the system achieves high  physical fidelity.
+
+## Future Work
+* **N-Body Simulation:** Extending the state vector to $6 \times N$ for Solar System dynamics.
+* **Galactic Trajectories:** Modeling stellar motion within galactic potentials.
+* **Deep Space Missions:** Implementing interplanetary transfer maneuvers (Hohmann).
+
+

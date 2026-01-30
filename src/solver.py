@@ -1,5 +1,5 @@
 import numpy as np
-from physics import J2, R_EARTH
+from physics import J2, R_EARTH, DIST_MOON, OMEGA_MOON, MU_MOON
 
 def orbit_equations(t, state, mu):
     """
@@ -53,3 +53,36 @@ def get_orbital_elements(state):
     if n_vec[1] < 0:
         Omega = 2 * np.pi - Omega
     return Omega
+
+def orbit_equations_3body(t, state, mu):
+    x, y, z, vx, vy, vz = state
+    r = np.sqrt(x**2 + y**2 + z**2)
+
+    # Accélération Newtonienne centrale 
+    ax = -mu * x / r**3
+    ay = -mu * y / r**3
+    az = -mu * z / r**3
+
+
+    # Accélération de la Terre + J2
+    factor = (3/2) * J2 * mu * (R_EARTH**2) / (r**5)
+
+    z_over_r_sq = (z/r)**2
+
+    ax_j2 = factor * x * (5 * z_over_r_sq - 1)
+    ay_j2 = factor * y * (5 * z_over_r_sq - 1)
+    az_j2 = factor * z * (5 * z_over_r_sq - 3)
+    
+    # Position de la Lune à l'instant t
+    x_l = DIST_MOON * np.cos(OMEGA_MOON * t)
+    y_l = DIST_MOON * np.sin(OMEGA_MOON * t)
+    z_l = 0    # Ça me permet de simplifier la Lune dans le plan équatorial
+
+    # Accélération due à la Lune
+    # Distance Satellite-Lune
+    r_sl = np.sqrt((x-x_l)**2 + (y-y_l)**2 + (z-z_l)**2)
+    ax_l = -MU_MOON * (x - x_l) / r_sl**3
+    ay_l = -MU_MOON * (y - y_l) / r_sl**3
+    az_l = -MU_MOON * (z - z_l) / r_sl**3
+
+    return [vx, vy, vz, ax + ax_j2 + ax_l, ay + ay_j2 + ay_l, az + az_j2 + az_l]
