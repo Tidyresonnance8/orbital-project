@@ -1,5 +1,5 @@
 import numpy as np
-from physics import J2, R_EARTH, DIST_MOON, OMEGA_MOON, MU_MOON
+from physics import J2, R_EARTH, DIST_MOON, OMEGA_MOON, MU_MOON, G
 
 def orbit_equations(t, state, mu):
     """
@@ -86,3 +86,29 @@ def orbit_equations_3body(t, state, mu):
     az_l = -MU_MOON * (z - z_l) / r_sl**3
 
     return [vx, vy, vz, ax + ax_j2 + ax_l, ay + ay_j2 + ay_l, az + az_j2 + az_l]
+
+def n_body_equations(t, state, masses):
+    """
+    Équations du mouvement pour le problème à N-corps.
+    state: vecteur de taille 6*N [x1, y1, z1, vx1, vy1, vz1, ...]
+    """
+    N = len(masses)
+    bodies = state.reshape((N, 6))
+    derivatives = np.zeros_like(bodies)
+
+    for i in range(N):
+        # dérivée de la position est la vitesse
+        derivatives[i, :3] = bodies[i, 3:]
+
+        # Calcul de l'accélération gravitationnelle mutuelle
+        acc = np.zeros(3)
+        ri = bodies[i, :3]
+        for j in range(N):
+            if i == j: continue
+            rj = bodies[j, :3]
+            r_vec = rj - ri
+            r_mag = np.linalg.norm(r_vec)
+            acc += G * masses[j] * r_vec / r_mag**3
+        derivatives[i, 3:] = acc
+    
+    return derivatives.flatten()

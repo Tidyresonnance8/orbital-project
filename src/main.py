@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
-from physics import MU_EARTH, R_EARTH, J2, DIST_MOON, OMEGA_MOON
-from solver import orbit_equations_3body 
+from physics import MU_EARTH, R_EARTH, J2, DIST_MOON, OMEGA_MOON, SOLAR_SYSTEM_DATA
+from solver import orbit_equations_3body, n_body_equations 
 import os
 from mpl_toolkits.mplot3d import Axes3D
 from solver import get_orbital_elements
@@ -159,9 +159,67 @@ def run_simulation():
                         fargs=(sol.y, line, point), interval=20, blit=False)
  
     plt.show()
+
+
+# nouvelle fonction système solaire
+def run_solar_system_2():
+    print("Décollage pour le système solaire")
+
+    names = list(SOLAR_SYSTEM_DATA.keys())
+    masses = [SOLAR_SYSTEM_DATA[name][0] for name in names]
+    initial_state = []
+
+    for name in names:
+        m, dist, vel = SOLAR_SYSTEM_DATA[name]
+        # État initial simplifié : Position sur X, Vitesse sur Y
+        initial_state.extend([dist, 0, 0, 0, vel, 0])
+
+    initial_state = np.array(initial_state)
+
+    # Simulation sur 1 an ( en secondes ) avec un pas de 1 jour
+    t_span = (0, 365 * 24 * 3600)
+    h = 24 * 3600
+
+    # Utilisation du RK4 sur 54 variables d'un coup 
+    t, y_raw = my_rk4_solver(n_body_equations, t_span, initial_state, h, args=(masses,))
+
+    # Préparation de l'affichage
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection='3d')
+    limit = 3e11 # On fait un zoom sur les planètes telluriques (jusquà Mars)
+    #limit = 5e12 #Pour toutes les planètes
+    ax.set_xlim(-limit, limit); ax.set_ylim(-limit, limit); ax.set_zlim(-limit, limit)
+    ax.set_title("Simulation du Système Solaire (N-Body)")
+
+    lines = [ax.plot([], [], [], '-', label=names[i], alpha=0.6)[0] for i in range(len(names))]
+    points = [ax.plot([], [], [], 'o', markersize=8)[0] for i in range(len(names))]
+
+    def update(num):
+        for i in range(len(names)):
+            # Extraction des données par planète
+            idx = 6 * i
+            lines[i].set_data(y_raw[idx, :num], y_raw[idx+1, :num])
+            lines[i].set_3d_properties(y_raw[idx+2, :num])
+            points[i].set_data(y_raw[idx:idx+1, num-1], y_raw[idx+1:idx+2, num-1])
+            points[i].set_3d_properties(y_raw[idx+2:idx+3, num-1])
+        return lines + points
+    
+    ani = FuncAnimation(fig, update, frames=len(t), interval=30, blit=False)
+    plt.legend(loc='upper right')
+    plt.show()
     
 
 if __name__ == "__main__":
-    run_simulation()
+    print("Choisissez la simulation à lancer :")
+    print("1 : Orbite Terre-Lune (Satellite J2)")
+    print("2: Système Solaire complet (N-Corps)")
+    choix = input("Votre choix (1 ou 2) : ")
+    if choix == "1":
+        run_simulation()
+    elif choix == "2":
+        run_solar_system_2()
+    else:
+        print("Choix invalide.")
+
 
 
