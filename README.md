@@ -65,6 +65,17 @@ The animation below shows the concurrent motion of the satellite (LEO) and the M
 ## Final Validation
 By integrating the Moon's gravity and Earth's oblateness, the system achieves high  physical fidelity.
 
+## 🌌 Expansion: The N-Body Solar System Model
+The project has successfully transitioned from a 2-body satellite model to a **comprehensive N-body Solar System simulation** (Sun + 8 planets). This required expanding the state vector from 6 to 54 coupled variables ($6 \times 9$ bodies).
+
+### Multi-Scale Visualization
+I implemented two distinct viewing scales to demonstrate the vastness of the system:
+
+| Inner Solar System (Zoomed) | Full Solar System (To Scale) |
+| :---: | :---: |
+| ![Inner System](results/inner_solar_system.gif) | ![Full System](results/full_solar_system.gif) |
+| Focus on terrestrial planets (up to Mars). | View including Neptune at $4.5 \times 10^{12}$ m. |
+
 ## Future Work
 * **N-Body Simulation:** Extending the state vector to $6 \times N$ for Solar System dynamics.
 * **Galactic Trajectories:** Modeling stellar motion within galactic potentials.
